@@ -26,11 +26,12 @@ jobs:
         with:
           pattern: ${{ inputs.artifact-pattern }}
           name: ${{ inputs.artifact-name }}
+      - run: ls -la
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            ${{ inputs.sarif-report-path && format('-Dsonar.sarifReportPaths={0}', inputs.sarif-report-path) || '' }}
-            ${{ inputs.python-coverage-report-path && format('-Dsonar.python.coverage.reportPaths={0}', inputs.python-coverage-report-path) || '' }}
+            -Dsonar.sarifReportPaths=${{ inputs.sarif-report-path }}
+            -Dsonar.python.coverage.reportPaths=${{ inputs.python-coverage-report-path }}
