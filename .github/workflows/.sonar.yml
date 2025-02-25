@@ -1,0 +1,36 @@
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        required: false
+        type: string
+      artifact-pattern:
+        required: false
+        type: string
+        default: sonarqube-report-*
+      sarif-report-path:
+        required: false
+        type: string
+      python-coverage-report-path:
+        required: false
+        type: string
+
+jobs:
+  sonar:
+    name: SonarQube Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Report Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ inputs.artifact-pattern }}
+          name: ${{ inputs.artifact-name }}
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            ${{ inputs.sarif-report-path && format('-Dsonar.sarifReportPaths={0}', inputs.sarif-report-path) || '' }}
+            ${{ inputs.python-coverage-report-path && format('-Dsonar.python.coverage.reportPaths={0}', inputs.python-coverage-report-path) || '' }}

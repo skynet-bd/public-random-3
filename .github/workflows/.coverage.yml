@@ -1,0 +1,56 @@
+on:
+  workflow_call:
+    inputs:
+      report-path:
+        required: false
+        type: string
+      artifact-name:
+        required: false
+        type: string
+        default: report-coverage
+      python-version:
+        required: false
+        type: string
+        default: '3.11'
+      cache-dependency-paths:
+        required: false
+        type: string
+        default: "**/requirements/*"
+
+jobs:
+  coverage:
+    name: Code Coverage Scan
+    runs-on: ubuntu-latest
+    env:
+      COVERAGE_LCOV_PATH: .coverage.lcov.info
+    permissions:
+      pull-requests: write
+      issues: write
+      checks: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: pip
+          cache-dependency-path: ${{ inputs.cache-dependency-path }}
+      - name: Run Coverage Tests
+        run: |
+          pip install -r requirements/owner.pip;
+          pytest --cov \
+            --cov-report lcov:${{ env.COVERAGE_LCOV_PATH }} \
+            ${{ inputs.report-path && format('--cov-report xml:{0}', inputs.report-path) || ';' }}
+      - name: Create Coverage Report Artifact
+        if: ${{ always() && inputs.report-path }}
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.report-path }}
+      - name: Coverage PR Comment
+        if: ${{ always() && github.event_name == 'pull_request' }}
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        with:
+          filter-changed-files: true
+          lcov-file: ${{ env.COVERAGE_LCOV_PATH }}

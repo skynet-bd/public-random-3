@@ -1,0 +1,33 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  issues: write
+  checks: write
+
+jobs:
+  trivy:
+    uses: ./.github/workflows/.trivy.yml
+    with:
+      report-path: .trivy.sarif
+      artifact-name: sonarqube-report-trivy
+  coverage:
+    uses: ./.github/workflows/.coverage.yml
+    with:
+      report-path: .coverage.xml
+      artifact-name: sonarqube-report-coverage
+  sonar:
+    uses: ./.github/workflows/.sonar.yml
+    needs: [ trivy, coverage ]
+    if: always()
+    secrets: inherit
+    with:
+      sarif-report-path: .trivy.sarif
+      python-coverage-report-path: .coverage.xml

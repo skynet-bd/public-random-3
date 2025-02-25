@@ -1,0 +1,54 @@
+on:
+  workflow_call:
+    inputs:
+      report-path:
+        required: false
+        type: string
+      artifact-name:
+        required: false
+        type: string
+        default: report-trivy
+      scan-type:
+        required: false
+        type: string
+        default: fs
+      scan-ref:
+        required: false
+        type: string
+        default: .
+      scanners:
+        required: false
+        type: string
+        default: vuln,secret,misconfig
+
+jobs:
+  trivy:
+    name: Trivy Scan
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+      checks: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy Scan
+        uses: aquasecurity/trivy-action@0.29.0
+        with:
+          exit-code: 1
+          format: sarif
+          output: ${{ inputs.report-path }}
+          scanners: ${{ inputs.scanners }}
+          scan-type: ${{ inputs.scan-type }}
+          scan-ref: ${{ inputs.scan-ref }}
+      - name: Create Trivy Report Artifact
+        if: ${{ always() && inputs.report-path }}
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.report-path }}
+      - name: Trivy CodeQL Report
+        if: ${{ always() && inputs.report-path }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ inputs.report-path }}
