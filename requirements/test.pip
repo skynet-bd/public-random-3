@@ -1,0 +1,22 @@
+# Tests
+Pygments>=2.16.1
+pytest
+pytest-cov
+pytest-xdist[psutil]
+
+# Optional Packages
+Markdown>=3.5.1
+BeautifulSoup4
+lxml
+typogrify
+
+blinker
+docutils
+feedgenerator
+jinja2
+ordered-set
+pygments
+python-dateutil
+rich
+unidecode
+watchfiles
